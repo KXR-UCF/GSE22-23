@@ -1,0 +1,10 @@
+#!/bin/bash
+while true
+do
+	if python3 ~/finaldatacollect.py  ; then
+		break
+	else
+		echo "bad"
+	fi
+done
+echo "qwe"

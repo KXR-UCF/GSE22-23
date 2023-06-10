@@ -1,0 +1,34 @@
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/bus/usb/001/002 - 0424_2514
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/bus/usb/001/003 - 8087_0a2b
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/bus/usb/001/001 - Linux_5.10.0-22-amd64_xhci-hcd_xHCI_Host_Controller_0000:00:14.0
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/gpiochip1 -
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/ttyUSB0 -
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/bus/usb/001/011 - Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_469606d04285ec11bfd2012c19c2d21c
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/bus/usb/002/001 - Linux_5.10.0-22-amd64_xhci-hcd_xHCI_Host_Controller_0000:00:14.0
+
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/bus/usb/001/002 - 0424_2514
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/bus/usb/001/003 - 8087_0a2b
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/bus/usb/001/001 - Linux_5.10.0-22-amd64_xhci-hcd_xHCI_Host_Controller_0000:00:14.0
+ttylist.bat: 7: [[: not found
+ttylist.bat: 9: [[: not found
+/dev/bus/usb/002/001 - Linux_5.10.0-22-amd64_xhci-hcd_xHCI_Host_Controller_0000:00:14.0
