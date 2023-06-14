@@ -94,6 +94,9 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
             # else:
             #     externalQD.off()
             #     isQDEnabled = False
+        elif (self.path == '/qdreset'):
+            print("QD Reset")
+            externalQD.off()
         elif (self.path == '/siren'):
             print("Siren")
             externalSIR.on()

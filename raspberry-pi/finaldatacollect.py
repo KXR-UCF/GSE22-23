@@ -52,11 +52,8 @@ write_api.write(bucket=bucket, org=org, record=test)
 while True:
     try:
         data_raw = ser.readline()
-        print(data_raw)
         arr = data_raw.decode('UTF-8').split()
-        print("working")
     except:
-        print("issues")
         connect_ser()
 
     # csvdata = []
@@ -71,22 +68,9 @@ while True:
     thrust = t1+t2 + t3
 
     lc = influxdb_client.Point("LoadCell").field("Thrust", thrust).field("Thrust1", t1).field(
-        "Thrust2", t2).field("Thrust3", t3).field("OxidizerTank", float(arr[0]))
+        "Thrust2", t2).field("Thrust3", t3).field("OxidizerTank", float(arr[0])).field("Mass", float(arr[6]))
     pt = influxdb_client.Point("PressureTransducer").field(
         "CombustionChamber", float(arr[4])).field("OxidizerTank", float(arr[5]))
-    # try to get Combustion Chamber
-    # print(arr)
-
-   # try:
-    #    pt = pt.field("CombustionChamber", int(arr[4]))
-   # except:
-    #    print("CombustionChamber is not connected")
-    # try to see if there is any Oxidizer Pressure data
-    # try:
-    #   pt = pt.field("OxidizerTank", int(arr[5]))
-   # except:
-    #    print("OxidizerTank is not Connected")
-    # ts = influxdb_client.Point("TemperatureSensor").field("Temp1", int(arr[6])).field("Temp2", int(arr[7]))
 
     write_api.write(bucket=bucket, org=org, record=lc)
     write_api.write(bucket=bucket, org=org, record=pt)
