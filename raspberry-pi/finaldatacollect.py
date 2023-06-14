@@ -68,7 +68,7 @@ while True:
     thrust = t1+t2 + t3
 
     lc = influxdb_client.Point("LoadCell").field("Thrust", thrust).field("Thrust1", t1).field(
-        "Thrust2", t2).field("Thrust3", t3).field("OxidizerTank", float(arr[0])).field("Mass", float(arr[6]))
+        "Thrust2", t2).field("Thrust3", t3).field("OxidizerTank", float(arr[0]))
     pt = influxdb_client.Point("PressureTransducer").field(
         "CombustionChamber", float(arr[4])).field("OxidizerTank", float(arr[5]))
 
