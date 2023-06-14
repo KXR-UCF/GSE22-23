@@ -17,7 +17,7 @@ const int SIGNAL_PIN1 = 4; //  23   ETh
 const int SIGNAL_PIN2 = 5; //  24   Nox
 const int SIGNAL_PIN3 = 2; //  25   Fill
 const int SIGNAL_PIN4 = 6; //  21   Vent    now 8
-const int SIGNAL_PIN5 = 3; //  26   ---
+const int SIGNAL_PIN5 = 3; //  26   Toggle
 
 // Pin to receive the signal from the first Arduino
 // Pin to control the buzzer

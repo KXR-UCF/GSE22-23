@@ -1,180 +1,111 @@
-import asyncio
-import websockets
-import serial
-import json
+import http.server
+import socketserver
+import os
 from gpiozero import LED
 import time
-import datetime
+PORT = 9001
+# Vent = ETH
+# FILL = NOX
 
-fire = LED(21)
-armFire = LED(26)
-externalETH = LED(2)
-externalNOX = LED(3)
-externalFIL = LED(25)
-externalVEN = LED(8)
-externalPWR = LED(20)
-
-state = {
-    'Time': datetime.datetime.now(),
-    'Type': 'State',
-    'Vent': 'Close',
-    'Fill': 'Close',
-    'Chamber': 'Close',
-    'Ematch': 'Disarmed',
-    'Power': 'Off'
-}
-
-# Reads in commands from CHIP and send back what state its in
+fire = LED(17)
+armFire = LED(27)
+externalETH = LED(23)
+externalNOX = LED(24)
+externalFIL = LED(8)
+externalVEN = LED(7)
+externalPWR = LED(22)
+externalIREC1 = LED(0)
+externalIREC2 = LED(5)
+externalSIR = LED(13)
+externalQD = LED(6)
+# isQDEnabled = False
 
 
-async def handle_message(websocket, message):
-    if message == 'fire':
-        print("Fire!!")
-        fire.on()
-        time.sleep(0.25)
-        externalETH.on()
-        externalNOX.on()
-        time.sleep(0.1)
-        fire.off()
-        state['Chamber'] = 'Close'
-    elif message == 'vent':
-        print("Vent")
-        externalVEN.on()
-        state['Vent'] = 'Open'
-    elif message == 'ventclose':
-        print("Vent close")
-        externalVEN.off()
-        state['Vent'] = 'Close'
-    elif message == 'fill':
-        print("Fill")
-        externalFIL.on()
-        state['Fill'] = 'Open'
-    elif message == 'fillclose':
-        print("Fill close")
-        externalFIL.off()
-        state['Fill'] = 'Close'
-    elif message == 'arm':
-        armFire.on()
-        print("Arm E-Match")
-        state['Ematch'] = 'Armed'
-    elif message == 'disarm':
-        armFire.off()
-        print("Disarm E-Match")
-        state['Ematch'] = 'Disarmed'
-    elif message == 'closeall':
-        print("Close valves")
-        externalETH.off()
-        externalNOX.off()
-        state['Servos'] = 'Close'
-    elif message == 'abort':
-        print("Abort")
-        externalETH.off()
-        externalNOX.on()
-        state['Servos'] = 'Abort'
-    elif message == 'power':
-        print("Power on")
-        externalPWR.on()
-        state['Power'] = 'On'
-    elif message == 'poweroff':
-        print("Power Off")
-        externalPWR.off()
-        state['Power'] = 'Off'
+class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
 
-    state['time'] = datetime.datetime.now()
+    def do_GET(self):
+        self.path = 'index.html'
+        return http.server.SimpleHTTPRequestHandler.do_GET(self)
 
-    json_data = json.dumps(state)
+    def do_POST(self):
+        if (self.path == "/vent"):
+            print("Vent")
+            externalVEN.on()
 
-    await websocket.send(json_data)
+        elif (self.path == "/ventclose"):
+            print("Vent close")
+            externalVEN.off()
 
+        elif (self.path == "/fill"):
 
-async def serial_setup():
-    global ser
-    ser_error = False
+            print("Fill")
+            externalFIL.on()
 
-    while True:
-        try:
-            ser = serial.Serial(port='/dev/ttyAMA0',
-                                baudrate=115200, timeout=2)
-            ser_error = False
+        elif (self.path == "/fillclose"):
+            print("Fill close")
+            externalFIL.off()
 
-        except Exception as e:
-            print(str(e))
-            ser_error = True
-            pass
+        elif (self.path == "/arm"):
+            armFire.on()
+            print("Arm E-Match")
 
-        if ser_error:
-            print("sleepy")
-            ser_error = False
-            time.sleep(2)
-        else:
-            print("success")
-            break
+        elif (self.path == "/disarm"):
+            armFire.off()
+            print("Disarm E-Match")
 
-    ser.flushInput()
-    ser.flushOutput()
+        elif (self.path == "/fire"):
+            print("Fire!!")
+            fire.on()
+            time.sleep(0.3)
+            externalETH.on()
+            externalNOX.on()
+            externalIREC1.on()
+            time.sleep(0.05)
+            externalIREC1.off()
+            time.sleep(0.1)
+            fire.off()
+
+        elif (self.path == "/closeall"):
+            print("Close valves")
+            externalETH.off()
+            externalNOX.off()
+            externalIREC2.on()
+            time.sleep(0.5)
+            externalIREC2.off()
+
+        elif (self.path == "/abort"):
+            print("Abort")
+            externalETH.off()
+            externalNOX.on()
+
+        elif (self.path == "/power"):
+            print("Power on")
+            externalPWR.on()
+
+        elif (self.path == "/poweroff"):
+            print("Power Off")
+            externalPWR.off()
+
+        elif (self.path == "/qd"):
+            print("Quick Disconnect")
+            externalQD.on()
+            # if isQDEnabled:
+            # isQDEnabled = True
+            # else:
+            #     externalQD.off()
+            #     isQDEnabled = False
+        elif (self.path == '/siren'):
+            print("Siren")
+            externalSIR.on()
+        elif (self.path == '/sirenoff'):
+            print("Sirenoff")
+            externalSIR.off()
 
 
-async def websocket_handler(websocket, path):
+        # print(self.path)
+        # print(self.headers)
+Handler = MyHttpRequestHandler
 
-    while True:
-        message = await websocket.recv()
-        print("Received:", message)
-        await handle_message(websocket, message)
-
-
-async def send_data(websocket):
-    while True:
-        # Read data from serial port
-        data_raw = ser.readline()
-        arr = data_raw.decode('UTF-8').split()
-
-        # Create a data dictionary
-        data = {
-            'Time': datetime.datetime.now(),
-            'Type': 'data',
-            'T1': float(arr[1]),
-            'T2': float(arr[2]),
-            'T3': float(arr[3]),
-            'Thrust': float(arr[1]) + float(arr[2]) + float(arr[3]),
-            'Oxidizer': float(arr[0]),
-            'P1': float(arr[4]),
-            'P2': float(arr[5]),
-        }
-
-        # Convert data to JSON format
-        json_data = json.dumps(data)
-
-        # Send the WebSocket message
-        await websocket.send(json_data)
-
-        # Adjust the sleep duration as per your requirements
-        await asyncio.sleep(1)
-
-
-async def main():
-    loop = asyncio.get_running_loop()
-
-    # Start the WebSocket server
-    start_server = await websockets.serve(websocket_handler, '0.0.0.0', 8765, loop=loop)
-    await serial_setup()
-    print("WebSocket server started")
-
-    # Create a separate task for sending serial data
-    serial_task = loop.create_task(
-        send_data(start_server))
-
-    try:
-        while True:
-            await asyncio.sleep(1)
-    except KeyboardInterrupt:
-        fire.off()
-        armFire.off()
-        externalETH.off()
-        externalNOX.off()
-        externalFIL.off()
-        externalVEN.off()
-        externalPWR.off()
-        ser.close()
-        serial_task.cancel()
-
-asyncio.run(main())
+with socketserver.TCPServer(("", PORT), Handler) as httpd:
+    # print("Http Server Serving at port", PORT)
+    httpd.serve_forever()

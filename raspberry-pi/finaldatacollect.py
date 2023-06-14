@@ -1,24 +1,18 @@
 import serial
-import subprocess
 import influxdb_client
 import time
 from influxdb_client import InfluxDBClient, Point, WritePrecision
-from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
+from influxdb_client.client.write_api import ASYNCHRONOUS
 from time import sleep
-token = "jwrod6dhQ-fsQRioNkXahfzXRFiTRHy1OH3ZVahlHmoH-OahKVVYI3Elhr2Z8uZl9S5XNIncDM6PS1o-2cFUnw=="
+import datetime
+import csv
+token = "c3PVhNaPlnEEgNi6EyoGt-D4JUohV0IBZajfT3f8GZ1nsMeSUSl3LeR3DtDLRd1_HhswsK-WmRhGU_axOtQRmQ=="
 org = "kxr"
 url = "http://192.168.1.100:8086"
-bucket = "DaleJR"
+bucket = "kxr"
 
 client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
 global ser
-
-
-# def send_to_influxdb(state):    # Write the data
-#     write_api = client.write_api(write_options=ASYNCHRONOUS)
-#     point = Point("watchdog").tag(
-#         "dalejr", '192.168.1.100').field("state", state)
-#     write_api.write(bucket=bucket, record=point)
 
 
 def connect_ser():
@@ -27,7 +21,7 @@ def connect_ser():
 
     while True:
         try:
-            ser = serial.Serial(port='/dev/ttyUSB0', baudrate=115200)
+            ser = serial.Serial(port='/dev/ttyUSB2', baudrate=115200)
             ser_error = False
 
         except:
@@ -37,11 +31,9 @@ def connect_ser():
         if ser_error:
             print("sleepy")
             ser_error = False
-            # send_to_influxdb("disconnected")
             time.sleep(2)
         else:
             print("success")
-            # send_to_influxdb("dalejr", "connected")
             break
 
 
@@ -50,19 +42,28 @@ connect_ser()
 ser.flushInput()
 ser.flushOutput()
 # sleep(10)
-# print("qweqwh")
 write_api = client.write_api(write_options=ASYNCHRONOUS)
 
 test = influxdb_client.Point("test").field("t", 3)
 write_api.write(bucket=bucket, org=org, record=test)
+# with open('/home/kxr/' + str(datetime.datetime.now()), 'w') as f:
+#     writer = csv.writer(f)
+#     writer.writerow(csvdata)
 while True:
     try:
         data_raw = ser.readline()
+        print(data_raw)
         arr = data_raw.decode('UTF-8').split()
+        print("working")
     except:
+        print("issues")
         connect_ser()
 
-    # print(arr)
+    # csvdata = []
+    # csvdata.append(datetime.datetime.now().strftime("%H:%M:%S.%f"))
+    # csvdata.extend(arr)
+
+    # Write data to CSV file
 
     t1 = float(arr[1])
     t2 = float(arr[2])
@@ -71,17 +72,20 @@ while True:
 
     lc = influxdb_client.Point("LoadCell").field("Thrust", thrust).field("Thrust1", t1).field(
         "Thrust2", t2).field("Thrust3", t3).field("OxidizerTank", float(arr[0]))
-    pt = influxdb_client.Point("PressureTransducer")
+    pt = influxdb_client.Point("PressureTransducer").field(
+        "CombustionChamber", float(arr[4])).field("OxidizerTank", float(arr[5]))
     # try to get Combustion Chamber
-    try:
-        pt = pt.field("CombustionChamber", int(arr[4]))
-    except:
-        print("CombustionChamber is not connected")
+    # print(arr)
+
+   # try:
+    #    pt = pt.field("CombustionChamber", int(arr[4]))
+   # except:
+    #    print("CombustionChamber is not connected")
     # try to see if there is any Oxidizer Pressure data
-    try:
-        pt = pt.field("OxidizerTank", int(arr[5]))
-    except:
-        print("OxidizerTank is not Connected")
+    # try:
+    #   pt = pt.field("OxidizerTank", int(arr[5]))
+   # except:
+    #    print("OxidizerTank is not Connected")
     # ts = influxdb_client.Point("TemperatureSensor").field("Temp1", int(arr[6])).field("Temp2", int(arr[7]))
 
     write_api.write(bucket=bucket, org=org, record=lc)
