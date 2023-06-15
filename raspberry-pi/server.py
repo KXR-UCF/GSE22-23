@@ -67,6 +67,7 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         elif (self.path == "/closeall"):
             print("Close valves")
+            externalQD.off()
             externalETH.off()
             externalNOX.off()
             externalIREC2.on()
@@ -89,6 +90,8 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif (self.path == "/qd"):
             print("Quick Disconnect")
             externalQD.on()
+            time.sleep(20.0)
+            externalQD.of()
             # if isQDEnabled:
             # isQDEnabled = True
             # else:
