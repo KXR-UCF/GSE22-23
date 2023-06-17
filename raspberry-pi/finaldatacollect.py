@@ -21,7 +21,7 @@ def connect_ser():
 
     while True:
         try:
-            ser = serial.Serial(port='/dev/ttyUSB2', baudrate=115200)
+            ser = serial.Serial(port='/dev/ttyUSB1', baudrate=115200)
             ser_error = False
 
         except:

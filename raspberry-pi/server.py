@@ -90,13 +90,7 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif (self.path == "/qd"):
             print("Quick Disconnect")
             externalQD.on()
-            time.sleep(20.0)
-            externalQD.of()
-            # if isQDEnabled:
-            # isQDEnabled = True
-            # else:
-            #     externalQD.off()
-            #     isQDEnabled = False
+
         elif (self.path == '/qdreset'):
             print("QD Reset")
             externalQD.off()
@@ -106,7 +100,6 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif (self.path == '/sirenoff'):
             print("Sirenoff")
             externalSIR.off()
-
 
         # print(self.path)
         # print(self.headers)
