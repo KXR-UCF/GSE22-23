@@ -1,4 +1,5 @@
 import serial
+import re
 import influxdb_client
 import time
 from influxdb_client import InfluxDBClient, Point, WritePrecision
@@ -12,66 +13,43 @@ url = "http://192.168.1.100:8086"
 bucket = "kxr"
 
 client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
-global ser
 
 
-def connect_ser():
-    ser_error = False
+def connect_ser(pattern):
     global ser
+    ser = None
+    available_ports = list(serial.tools.list_ports.comports())
 
-    while True:
-        try:
-            ser = serial.Serial(port='/dev/ttyUSB1', baudrate=115200)
-            ser_error = False
+    for port in available_ports:
+        port_name = port.device
+        if port_name.startswith('/dev/ttyUSB'):
+            try:
+                ser = serial.Serial(port_name)
+                while True:
+                    line = ser.readline().decode().strip()
+                    if re.match(pattern, line):
+                        break  # Found a matching value, exit the loop
+            except serial.SerialException:
+                # Port is unavailable or cannot be opened
+                pass
 
-        except:
-            ser_error = True
-            pass
-
-        if ser_error:
-            print("sleepy")
-            ser_error = False
-            time.sleep(2)
-        else:
-            print("success")
-            break
+    if ser is not None:
+        # Port was successfully opened and validated, return the serial port instance
+        return ser
+    else:
+        # No matching port found, return None
+        return None
 
 
 connect_ser()
 
 ser.flushInput()
 ser.flushOutput()
-# sleep(10)
+
 write_api = client.write_api(write_options=ASYNCHRONOUS)
 
-test = influxdb_client.Point("test").field("t", 3)
-write_api.write(bucket=bucket, org=org, record=test)
-# with open('/home/kxr/' + str(datetime.datetime.now()), 'w') as f:
-#     writer = csv.writer(f)
-#     writer.writerow(csvdata)
 while True:
-    try:
-        data_raw = ser.readline()
-        arr = data_raw.decode('UTF-8').split()
-    except:
-        connect_ser()
-
-    # csvdata = []
-    # csvdata.append(datetime.datetime.now().strftime("%H:%M:%S.%f"))
-    # csvdata.extend(arr)
-
-    # Write data to CSV file
-
-    t1 = float(arr[1])
-    t2 = float(arr[2])
-    t3 = float(arr[3])
-    thrust = t1+t2 + t3
-
-    lc = influxdb_client.Point("LoadCell").field("Thrust", thrust).field("Thrust1", t1).field(
-        "Thrust2", t2).field("Thrust3", t3).field("OxidizerTank", float(arr[0]))
-    pt = influxdb_client.Point("PressureTransducer").field(
-        "CombustionChamber", float(arr[4])).field("OxidizerTank", float(arr[5]))
-
-    write_api.write(bucket=bucket, org=org, record=lc)
-    write_api.write(bucket=bucket, org=org, record=pt)
-    # write_api.write(bucket=bucket, org=org, record=ts)
+    if ser.in_waiting > 0:
+        data = ser.read()
+        p = influxdb_client.Point("DaleSr").from_dict(data)
+        write_api.write(bucket=bucket, org=org, record=p)
