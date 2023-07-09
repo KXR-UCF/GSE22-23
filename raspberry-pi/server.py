@@ -12,7 +12,6 @@ from influxdb_client.client.write_api import ASYNCHRONOUS
 import datetime
 import csv
 
-PORT = 9001
 
 fire = LED(17)
 armFire = LED(27)
@@ -30,35 +29,24 @@ token = "c3PVhNaPlnEEgNi6EyoGt-D4JUohV0IBZajfT3f8GZ1nsMeSUSl3LeR3DtDLRd1_HhswsK-
 org = "kxr"
 url = "http://192.168.1.100:8086"
 bucket = "kxr"
+port = 9001
 
 client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
 write_api = client.write_api(write_options=ASYNCHRONOUS)
+global ser
 
 
-def connect_ser(pattern):
+def connect_ser():
     global ser
     ser = None
-    available_ports = list(serial.tools.list_ports.comports())
+    path = '/dev/ttyACM0'
 
-    for port in available_ports:
-        port_name = port.device
-        if port_name.startswith('/dev/ttyUSB'):
-            try:
-                ser = serial.Serial(port_name)
-                while True:
-                    line = ser.readline().decode().strip()
-                    if len(line) > 0:
-                        break  # Found a matching value, exit the loop
-            except serial.SerialException:
-                # Port is unavailable or cannot be opened
-                pass
+    while not os.path.exists(path):
+        print(f"Device {path} does not exist.")
 
-    if ser is not None:
-        # Port was successfully opened and validated, return the serial port instance
-        return ser
-    else:
-        # No matching port found, return None
-        return None
+    print("Connected")
+
+    ser = serial.Serial(port=port, baudrate=115200)
 
 
 async def datacollect():
@@ -170,6 +158,7 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
             externalSIR.off()
 
         write_api.write(bucket=bucket, org=org, record=p)
+
 
         # print(self.path)
         # print(self.headers)
