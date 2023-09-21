@@ -8,7 +8,7 @@ import time
 import influxdb_client
 from gpiozero import LED
 from influxdb_client import InfluxDBClient, Point, WritePrecision
-from influxdb_client.client.write_api import SYNCHRONOUS
+from influxdb_client.client.write_api import ASYNCHRONOUS
 
 # Servo Handling
 fire = LED(17)
@@ -31,28 +31,24 @@ url = "http://192.168.1.100:8086"
 bucket = "kxr"
 
 # Teensy 4.1 details
-serial_port = '/dev/ttyACM0'
+serial_port = '/dev/ttyACM1'
 baud_rate = 115200
 global ser
 
 client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
-write_api = client.write_api(write_options=SYNCHRONOUS)
+write_api = client.write_api(write_options=ASYNCHRONOUS)
 
 # Connect to the teensy 4.1
-
-
 async def connect_ser():
     global ser
     while not os.path.exists(serial_port):
         print(f"Device {serial_port} does not exist.")
         await asyncio.sleep(1)
 
-    ser = serial.Serial(port='/dev/ttyACM0', baudrate=baud_rate)
+    ser = serial.Serial(port=serial_port, baudrate=baud_rate)
     print(f"Device {serial_port} Connected")
 
 # Datacollection system
-
-
 async def datacollect():
     print("datacollect")
     ser.flushInput()
@@ -62,10 +58,9 @@ async def datacollect():
         if ser.in_waiting > 0:
             data_raw = ser.readline()
             arr = data_raw.decode('UTF-8').split()
-
             # TODO: Make the Teensy worry about making the Object
             data = {
-                "measurement": "dale_sr",
+                "measurement": "DaleSr",
                 "fields": {
                     "thrust1": float(arr[0]),
                     "thrust2": float(arr[1]),
@@ -76,7 +71,7 @@ async def datacollect():
                     "pt2": float(arr[5]),
                     "tc1": float(arr[6]),
                     "tc2": float(arr[7]),
-                }
+                    }
             }
 
             p = Point.from_dict(data, WritePrecision.NS)
@@ -86,7 +81,6 @@ async def datacollect():
 def httpserver():
     print("http")
     # HTTP handler
-
     class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
             self.path = 'index.html'
@@ -184,20 +178,20 @@ def httpserver():
             write_api.write(bucket=bucket, org=org, record=p)
             self.send_response(200)
 
+
     Handler = MyHttpRequestHandler
 
     with socketserver.TCPServer(("", port), Handler) as httpd:
         print("serving at port", port)
         httpd.serve_forever()
 
-
 async def main():
-    await connect_ser()
 
     # HTTP server is on a separate thread due to I/O restrictions with datacollection
     http_server_thread = threading.Thread(target=httpserver)
     http_server_thread.start()
 
+    await connect_ser()
     # Run data collection task
     data_collection_task = asyncio.create_task(datacollect())
 
