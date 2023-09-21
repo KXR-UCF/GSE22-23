@@ -1,5 +1,5 @@
 #include "ADS1256.h"
-ADS1256 adc(5, 3, 3, 10, 2.500);  //DRDY, RESET, SYNC(PDWN), CS, VREF(float).
+ADS1256 adc(5, 3, 3, 10, 2.500); // DRDY, RESET, SYNC(PDWN), CS, VREF(float).
 String str = "";
 float num = 0.0;
 double adcPD1 = 0;
@@ -9,25 +9,31 @@ int adcTS2 = 0;
 int cal[4];
 int sum[4];
 
-struct data {
+struct data
+{
   float force[4];
   float pressure[2];
   float temperature[2];
 };
 
-data databus = {{0,0,0,0}, {0,0}, {0,0}};
+data databus = {{0, 0, 0, 0}, {0, 0}, {0, 0}};
 
-void setup() {
-  Serial.begin(115200);  //The value does not matter if you use an MCU with native USB
-  while (!Serial) {}
+void setup()
+{
+  Serial.begin(115200); // The value does not matter if you use an MCU with native USB
+  while (!Serial)
+  {
+  }
   adcSetup();
   tempSetup();
 }
 
-void loop() {
+void loop()
+{
   str = "";
   getData();
-  for(int i = 0; i < 4; i++){
+  for (int i = 0; i < 4; i++)
+  {
     str = String(str + String(databus.force[i]) + "  ");
   }
   str = String(str + String(databus.pressure[0]) + "  ");
